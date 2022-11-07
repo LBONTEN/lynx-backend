@@ -1,6 +1,6 @@
 
-data
-docs
+/data
+/docs
 
 .vscode
 .editorconfig

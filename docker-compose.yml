@@ -9,8 +9,6 @@ x-logging: &default-logging
 services:
 
   # TODO: move into proper image
-  aggregations:
-    build: ./backend/aggregations
 
   database:
     image: semtech/mu-authorization:0.6.0-beta.5
