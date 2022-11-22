@@ -27,15 +27,6 @@ services:
     labels:
       - logging=true
 
-  migrations:
-    image: semtech/mu-migrations-service:0.8.0
-    links:
-      - triplestore:database
-    volumes:
-      - ./config/migrations:/data/migrations
-    labels:
-      - logging=true
-
   # module for sending delta messages
   # currently used by:
   #   - tika-text-extractor, for saving text when a file is
@@ -49,7 +40,7 @@ services:
   elasticsearch:
     image: semtech/mu-search-elastic-backend:1.1.0
     volumes:
-      - ./data/elasticsearch/:/usr/share/elasticsearch/data
+      - elasticsearch-data:/usr/share/elasticsearch/data
     environment:
       - discovery.type=single-node
 
@@ -58,7 +49,7 @@ services:
     links:
       - database:database
     volumes:
-      - /data/app-public-decisions-database/data/files:/share
+      - files:/share
     labels:
       - logging=true
 
@@ -69,6 +60,15 @@ services:
     environment:
       DEFAULT_MU_AUTH_ALLOWED_GROUPS_HEADER: '[{"variables":[],"name":"public"}]'
       DEFAULT_ACCESS_CONTROL_ALLOW_ORIGIN_HEADER: "*"
+    labels:
+      - logging=true
+
+  migrations:
+    image: semtech/mu-migrations-service:0.8.0
+    links:
+      - triplestore:database
+    volumes:
+      - ./config/migrations:/data/migrations
     labels:
       - logging=true
 
@@ -90,13 +90,13 @@ services:
       - "gs://abb-textgen-models/gpt2-retrain"
       - "/models/"
     volumes:
-      - ./data/models/:/models
+      - modelstore:/models
 
   poc-ai-embed:
     image: lblod/poc-ai-embed:latest
     pull_policy: always
     volumes:
-      - ./data/models:/models/
+      - modelstore:/models
     container_name: lblod-embed-api
     depends_on:
       - models-init
@@ -117,8 +117,8 @@ services:
       - database:database
     volumes:
       - ./config/search:/config
-      - /data/app-public-decisions-database/data/files:/data
-      - ./data/search/cache:/cache
+      - files:/data
+      - search-cache:/cache
 
   swagger-ui:
     image: swaggerapi/swagger-ui
@@ -126,9 +126,9 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./docs/swagger.json:/swagger.json
+      - ./swagger.json:/config/swagger.json
     environment:
-      SWAGGER_JSON: /docs/swagger.json
+      SWAGGER_JSON: /config/swagger.json
       BASE_URL: "/docs"
 
   # TODO: make it so we dont need this anymore
@@ -137,29 +137,35 @@ services:
 
   tika-text-extractor:
     build: ./backend/tika-text-extractor
+    links:
+      - triplestore:database
     environment:
+      MU_SPARQL_ENDPOINT: "http://triplestore:8890/sparql"
       LOG_LEVEL: "debug"
-      FILE_RESOURCE_BASE: http://mu.semte.ch/services/file-service/files/
-      MU_APPLICATION_FILE_STORAGE_PATH: /share
-      MU_SPARQL_ENDPOINT: http://database:8890/sparql
-      MU_SPARQL_TIMEOUT: 60
-      MODE: "development"
-      TARGET_GRAPH: "<https://rdfs.org/soic/ns#content>"
-      FILE_DIR: "/share"
+      DEFAULT_GRAPH: "http://mu.semte.ch/application"
+      FILE_LOCATION: "/share/"
     volumes:
-      - /data/app-public-decisions-database/data/files:/share
-      - ./backend/tika-text-extractor:/app
+      - ./backend/tika-text-extractor/:/app
+      - ./config/tika-text-extractor/:/config
+      - files:/share
     labels:
       - logging=true
 
   triplestore:
-    image: redpencil/virtuoso
+    image: redpencil/virtuoso:1.0.0
     environment:
       SPARQL_UPDATE: "true"
       DEFAULT_GRAPH: "http://mu.semte.ch/application"
     ports:
       - "8890:8890"
     volumes:
-      - ./data/virtuoso:/data
+      - virtuoso:/data
     labels:
       - logging=true
+
+volumes:
+  virtuoso:
+  elasticsearch-data:
+  modelstore:
+  files:
+  search-cache:
