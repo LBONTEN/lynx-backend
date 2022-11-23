@@ -131,21 +131,19 @@ services:
       SWAGGER_JSON: /config/swagger.json
       BASE_URL: "/docs"
 
-  # TODO: make it so we dont need this anymore
+  # TODO: make it so we don't need this anymore
   tika:
     image: apache/tika:1.25-full
 
   tika-text-extractor:
-    build: ./backend/tika-text-extractor
+    image: lennybontenakel/tika-text-extractor:latest
     links:
       - triplestore:database
     environment:
       MU_SPARQL_ENDPOINT: "http://triplestore:8890/sparql"
       LOG_LEVEL: "debug"
       DEFAULT_GRAPH: "http://mu.semte.ch/application"
-      FILE_LOCATION: "/share/"
     volumes:
-      - ./backend/tika-text-extractor/:/app
       - ./config/tika-text-extractor/:/config
       - files:/share
     labels:
