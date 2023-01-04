@@ -1,8 +1,10 @@
 
 /data
 /docs
+/backend
 
-docker-compose.override.yml
+docker-compose.override.yml*
+
 
 .vscode
 .editorconfig

@@ -1,9 +1,12 @@
-PREFIX files: <http://lynx.lblod.info/files/>
-PREFIX ext: <http://mu.semte.ch/vocabularies/ext/> 
 PREFIX sioc: <http://rdfs.org/sioc/ns#>	
 
-INSERT DATA { 
-    GRAPH <http://mu.semte.ch/application> {
-        $fileId sioc:content $extractedText . 
-    } 
+DELETE {
+	GRAPH $graph {
+		$uri sioc:content ?o . 	
+	}		
+}
+INSERT { 
+	GRAPH $graph {
+		$uri sioc:content $content . 
+	} 
 }

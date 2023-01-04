@@ -48,8 +48,6 @@ services:
     image: semtech/mu-file-service:3.3.0
     links:
       - database:database
-    volumes:
-      - files:/share
     labels:
       - logging=true
 
@@ -72,7 +70,7 @@ services:
     labels:
       - logging=true
 
-  # Sure hope I need all these
+  # Sure hope I need all these models
   models-init:
     image: google/cloud-sdk:alpine
     command:
@@ -90,13 +88,13 @@ services:
       - "gs://abb-textgen-models/gpt2-retrain"
       - "/models/"
     volumes:
-      - modelstore:/models
+      - model-store:/models
 
   poc-ai-embed:
     image: lblod/poc-ai-embed:latest
     pull_policy: always
     volumes:
-      - modelstore:/models
+      - model-store:/models
     container_name: lblod-embed-api
     depends_on:
       - models-init
@@ -117,7 +115,6 @@ services:
       - database:database
     volumes:
       - ./config/search:/config
-      - files:/data
       - search-cache:/cache
 
   swagger-ui:
@@ -136,16 +133,16 @@ services:
     image: apache/tika:1.25-full
 
   tika-text-extractor:
-    image: lennybontenakel/tika-text-extractor:latest
+    image: lennybontenakel/tika-text-extractor
     links:
       - triplestore:database
     environment:
       MU_SPARQL_ENDPOINT: "http://triplestore:8890/sparql"
       LOG_LEVEL: "debug"
       DEFAULT_GRAPH: "http://mu.semte.ch/application"
+      CUSTOM_QUERY_PATH: "/config/query.sparql"
     volumes:
       - ./config/tika-text-extractor/:/config
-      - files:/share
     labels:
       - logging=true
 
@@ -164,6 +161,5 @@ services:
 volumes:
   virtuoso:
   elasticsearch-data:
-  modelstore:
-  files:
+  model-store:
   search-cache:
