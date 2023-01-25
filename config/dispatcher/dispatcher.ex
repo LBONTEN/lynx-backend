@@ -27,6 +27,10 @@ defmodule Dispatcher do
   # General/Shared
   ###############################################################
 
+  get "/*path",@json do
+    Proxy.forward conn, path, "http://frontend/"
+  end
+
   get "/files/*path", @json do
     Proxy.forward conn, path, "http://resources/files/"
   end
